@@ -4,3 +4,6 @@
 /conf/*
 !/conf/.gitkeep
 !/conf/example_*.*
+todo.txt
+/store/*
+!/store/.gitkeep

@@ -1,0 +1,12 @@
+AppConfig (
+    // Your Pushover credentials, used for notifications
+    pushover: {
+        user_key: "",
+        app_token: "",
+    },
+    // The page url to track
+    target: "www.google.com",
+    // The amount of seconds between checks. Keep it above 5 seconds.
+    timeout_seconds: 300, // 5 minutes
+    // take_screenshot: false,
+)
