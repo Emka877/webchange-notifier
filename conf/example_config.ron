@@ -8,5 +8,6 @@ AppConfig (
     target: "www.google.com",
     // The amount of seconds between checks. Keep it above 5 seconds.
     timeout_seconds: 300, // 5 minutes
-    // take_screenshot: false,
+    // take_screenshot: false, // Not yet available
+    // use_service: "pushover", // Not yet implemented
 )
