@@ -21,3 +21,4 @@ I know Rust would be taking a cannon to get the mosquito (Node or Python would p
 * The possibility to send a screenshot with the push notification (if the PN service allows it)
 * Different timeouts for each target web page
 * The possibility to force the re-creation of a "base"
+* Know what part(s) of the page changed

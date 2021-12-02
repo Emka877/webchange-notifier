@@ -8,6 +8,8 @@ AppConfig (
     target: "www.google.com",
     // The amount of seconds between checks. Keep it above 5 seconds.
     timeout_seconds: 300, // 5 minutes
+    // Where to store bases, relative to the executable root.
+    relative_store_path: "store/",
     // take_screenshot: false, // Not yet available
     // use_service: "pushover", // Not yet implemented
 )

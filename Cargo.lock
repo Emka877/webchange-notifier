@@ -992,6 +992,7 @@ dependencies = [
  "pushover-rs",
  "reqwest",
  "ron",
+ "serde",
  "tokio",
 ]
 

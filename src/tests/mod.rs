@@ -13,13 +13,13 @@ const DUMMY_CHANGED: &'static str = r#"<html>
 
 #[test]
 pub fn local_dummy_page_changed() {
-    let compare_result = compare_pages(DUMMY_BASE, DUMMY_CHANGED);
+    let compare_result: CompareResult = compare_pages(DUMMY_BASE, DUMMY_CHANGED);
     assert_eq!(compare_result, CompareResult::Different);
 }
 
 #[test]
 pub fn local_dummy_page_unchanged() {
-    let compare_result = compare_pages(DUMMY_BASE, DUMMY_BASE);
+    let compare_result: CompareResult = compare_pages(DUMMY_BASE, DUMMY_BASE);
     assert_eq!(compare_result, CompareResult::Same);
 }
 
