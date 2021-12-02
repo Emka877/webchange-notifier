@@ -4,6 +4,10 @@ I needed a tool that constantly tracks changes occurring on a webpage, so I did 
 
 ## Current state: WIP
 
+## Requirements
+* A Pushover account
+* Create a Pushover app
+
 ## How to use?
 1. Modify the `conf/example_config.ron` file to your convenience.
    1. Rename `example_config.ron` to `config.ron`.

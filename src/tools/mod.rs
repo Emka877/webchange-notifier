@@ -1,13 +1,14 @@
 use std::error::Error;
 use std::fs::File;
-use std::io::Write;
+use std::io::{Write, Read};
 use std::path::PathBuf;
 use reqwest::Response;
 use ron::de::from_reader;
 use crate::{BASE_FILENAME, COMPARISON_FILENAME};
-use crate::errors::BaseOverwriteError;
+use crate::errors::{BaseOverwriteError, FileReadError};
 use crate::models::AppConfig;
-use crate::tools::WriteType::Base;
+
+/* Enums */
 
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -18,8 +19,30 @@ pub enum CompareResult {
     EmptyNewest,
 }
 
+impl std::fmt::Display for CompareResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let message: &'static str = match *self {
+            CompareResult::Same => "The base and the comparison are the same.",
+            CompareResult::Different => "The base and the comparison are different.",
+            CompareResult::EmptyBase => "The base does not exist.",
+            CompareResult::EmptyNewest => "The comparison does not exist.",
+        };
+        write!(f, "{}", message)
+    }
+}
+
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum WriteType {
+    Base,
+    Comparison,
+}
+
+/* Helper functions */
+
 /// Compares a base to the newest version of a page.
 // TODO: Find a way to compare page strings faster (eg: for big pages)
+// Example: At the first difference, bail and return different.
 pub fn compare_pages(base: &str, newest: &str) -> CompareResult {
     if base.is_empty() {
         return CompareResult::EmptyBase;
@@ -34,6 +57,28 @@ pub fn compare_pages(base: &str, newest: &str) -> CompareResult {
     }
 
     CompareResult::Different
+}
+
+pub fn read_file_content(cfg: &AppConfig, which_file: WriteType) -> Result<String, FileReadError> {
+    let path: String = match which_file {
+        WriteType::Base => format!("{}/{}", cfg.relative_store_path.clone(), BASE_FILENAME),
+        WriteType::Comparison => format!("{}/{}", cfg.relative_store_path.clone(), COMPARISON_FILENAME),
+    };
+    let pathbuf: PathBuf = PathBuf::from(path);
+
+    let read_result = File::open(pathbuf);
+
+    if read_result.is_err() {
+        let cause = read_result.unwrap_err().to_string();
+        return Err(FileReadError::new(&cause));
+    }
+
+    let mut content_buf: String = "".to_owned();
+    if let Err(err) = read_result.unwrap().read_to_string(&mut content_buf) {
+        return Err(FileReadError::new(&err.to_string()));
+    }
+
+    Ok(content_buf)
 }
 
 pub async fn fetch_remote_page(url: String) -> Result<String, Box<dyn Error>> {
@@ -59,20 +104,17 @@ pub fn load_configuration() -> Result<AppConfig, ron::error::Error> {
 pub fn ensure_store_exists(config: &AppConfig) -> () {
     let path: PathBuf = PathBuf::from(config.relative_store_path.clone());
     if ! path.exists() {
-        std::fs::create_dir_all(path);
+        if let Err(err) = std::fs::create_dir_all(path) {
+            eprintln!("Warn: Could not create directories to ensure store's existence: {}", err);
+        }
     }
-}
-
-pub enum WriteType {
-    Base,
-    Comparison,
 }
 
 pub fn write_page_to_file(app_config: &AppConfig,
                           page_content: String,
                           write_type: WriteType,
                           overwrite: bool) -> Result<(), Box<dyn Error>> {
-    if write_type == Base && !overwrite {
+    if write_type.clone() == WriteType::Base && !overwrite {
         return Err(Box::new(BaseOverwriteError::new("Trying to overwrite existing base without the overwrite toggle.")));
     }
 

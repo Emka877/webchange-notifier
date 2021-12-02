@@ -1,15 +1,31 @@
 AppConfig (
-    // Your Pushover credentials, used for notifications
+    /* Your Pushover credentials, used for notifications */
     pushover: {
         user_key: "",
         app_token: "",
     },
-    // The page url to track
-    target: "www.google.com",
-    // The amount of seconds between checks. Keep it above 5 seconds.
+
+    /* The page url to track */
+    target: "localhost",
+
+    /* The amount of seconds between checks. Keep it above 5 seconds. */
     timeout_seconds: 300, // 5 minutes
-    // Where to store bases, relative to the executable root.
+
+    /* Where to store bases, relative to the executable root. */
     relative_store_path: "store/",
+
+    /* When true, This mode replaces the base whenever the target page changes.
+     * Otherwise, the base is never replaced, unless asked by the user with the "--overwrite-base"
+     * CLI arg.
+     */
+    // replace_mode: false, // Not yet implemented
+
+    /*
+     * Takes a screenshot of the changed page, and sends it with the push notification
+     * if the service allows it.
+     */
     // take_screenshot: false, // Not yet available
+
+    /* Select service to use to send push notifications */
     // use_service: "pushover", // Not yet implemented
 )

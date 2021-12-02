@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
     pub pushover: PushoverConfig,
     pub target: String,
@@ -8,7 +8,7 @@ pub struct AppConfig {
     pub relative_store_path: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct PushoverConfig {
     pub user_key: String,
     pub app_token: String,
