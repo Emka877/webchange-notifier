@@ -6,6 +6,7 @@ pub struct AppConfig {
     pub target: String,
     pub timeout_seconds: u64,
     pub relative_store_path: String,
+    pub push_message: String,
 }
 
 #[derive(Debug, Deserialize, Clone)]

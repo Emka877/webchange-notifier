@@ -14,6 +14,9 @@ AppConfig (
     /* Where to store bases, relative to the executable root. */
     relative_store_path: "store/",
 
+    /* The message to send with the push notification */
+    push_message: "The website you are tracking has changed!",
+
     /* When true, This mode replaces the base whenever the target page changes.
      * Otherwise, the base is never replaced, unless asked by the user with the "--overwrite-base"
      * CLI arg.

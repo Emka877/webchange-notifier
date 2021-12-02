@@ -1,12 +1,13 @@
-use std::error::Error;
-use std::fs::File;
-use std::io::{Write, Read};
-use std::path::PathBuf;
-use reqwest::Response;
-use ron::de::from_reader;
-use crate::{BASE_FILENAME, COMPARISON_FILENAME};
+use crate::config::{get_relative_pathbuf_to, FileType};
 use crate::errors::{BaseOverwriteError, FileReadError};
 use crate::models::AppConfig;
+use crate::{BASE_FILENAME, COMPARISON_FILENAME};
+use reqwest::Response;
+use ron::de::from_reader;
+use std::error::Error;
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Write};
+use std::path::PathBuf;
 
 /* Enums */
 
@@ -62,7 +63,11 @@ pub fn compare_pages(base: &str, newest: &str) -> CompareResult {
 pub fn read_file_content(cfg: &AppConfig, which_file: WriteType) -> Result<String, FileReadError> {
     let path: String = match which_file {
         WriteType::Base => format!("{}/{}", cfg.relative_store_path.clone(), BASE_FILENAME),
-        WriteType::Comparison => format!("{}/{}", cfg.relative_store_path.clone(), COMPARISON_FILENAME),
+        WriteType::Comparison => format!(
+            "{}/{}",
+            cfg.relative_store_path.clone(),
+            COMPARISON_FILENAME
+        ),
     };
     let pathbuf: PathBuf = PathBuf::from(path);
 
@@ -83,7 +88,8 @@ pub fn read_file_content(cfg: &AppConfig, which_file: WriteType) -> Result<Strin
 
 pub async fn fetch_remote_page(url: String) -> Result<String, Box<dyn Error>> {
     let client = reqwest::Client::new();
-    let response: Response = client.get(url)
+    let response: Response = client
+        .get(url)
         .timeout(core::time::Duration::from_secs(20))
         .send()
         .await?;
@@ -103,28 +109,37 @@ pub fn load_configuration() -> Result<AppConfig, ron::error::Error> {
 
 pub fn ensure_store_exists(config: &AppConfig) -> () {
     let path: PathBuf = PathBuf::from(config.relative_store_path.clone());
-    if ! path.exists() {
+    if !path.exists() {
         if let Err(err) = std::fs::create_dir_all(path) {
-            eprintln!("Warn: Could not create directories to ensure store's existence: {}", err);
+            eprintln!(
+                "Warn: Could not create directories to ensure store's existence: {}",
+                err
+            );
         }
     }
 }
 
-pub fn write_page_to_file(app_config: &AppConfig,
-                          page_content: String,
-                          write_type: WriteType,
-                          overwrite: bool) -> Result<(), Box<dyn Error>> {
-    if write_type.clone() == WriteType::Base && !overwrite {
-        return Err(Box::new(BaseOverwriteError::new("Trying to overwrite existing base without the overwrite toggle.")));
+pub fn write_page_to_file(
+    app_config: &AppConfig,
+    page_content: String,
+    write_type: WriteType,
+    overwrite: bool,
+) -> Result<(), Box<dyn Error>> {
+    let base_exists: bool = get_relative_pathbuf_to(app_config, FileType::WriteType(WriteType::Base)).exists();
+    if write_type.clone() == WriteType::Base && base_exists && !overwrite {
+        return Err(Box::new(BaseOverwriteError::new(
+            "Trying to overwrite existing base without the overwrite toggle.",
+        )));
     }
 
-    let file_name: String = match write_type {
-        WriteType::Base => BASE_FILENAME.to_owned(),
-        WriteType::Comparison => COMPARISON_FILENAME.to_owned(),
-    };
+    let path = get_relative_pathbuf_to(app_config, FileType::WriteType(write_type));
+    let exists_already = path.exists();
 
-    let path: PathBuf = PathBuf::from(format!("{}/{}", app_config.relative_store_path.clone(), file_name));
-    let mut file: File = File::open(path).expect("Could not open the comparison store.");
+    if !exists_already {
+        File::create(&path).expect(&format!("Could not create unexisting file: {}", path.to_str().unwrap()).to_owned());
+    }
+    
+    let mut file: File = OpenOptions::new().write(true).open(path).expect("Could not open the comparison store.");
     file.write_all(page_content.as_bytes())?;
 
     Ok(())

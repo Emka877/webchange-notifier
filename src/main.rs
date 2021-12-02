@@ -5,6 +5,11 @@ mod models;
 mod tests;
 mod tools;
 
+use config::{get_relative_pathbuf_to, FileType};
+use errors::FileReadError;
+use pushover_rs::{Message, send_pushover_request};
+use tools::{read_file_content, compare_pages, CompareResult};
+
 use crate::config::{BASE_FILENAME, COMPARISON_FILENAME};
 use crate::models::AppConfig;
 use crate::tools::{
@@ -70,12 +75,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-        // TODO: Compare the base and the comparison files contents
-
-        // TODO: If a change is detected, send a push notification
-
         // Overwrite must only be run once
         overwrite_base = false;
+
+        // Now we should have at least the base page in a file, possibly the comparison as well
+        // If the comparison doesn't exist yet, don't run a comparison (duh)
+        let base_read_result: Result<String, FileReadError> = read_file_content(&config, WriteType::Base);
+        let cmp_read_result: Result<String, FileReadError> = read_file_content(&config, WriteType::Comparison);
+
+        if base_read_result.is_ok() && cmp_read_result.is_ok() {
+            // Compare the base and the comparison files contents
+            let base_content: String = base_read_result.unwrap();
+            let cmp_content: String = cmp_read_result.unwrap();
+            let result: CompareResult = compare_pages(&base_content, &cmp_content);
+            println!("{}", result);
+
+            // Force overwriting the base if it's empty (which is not normal)
+            if result == CompareResult::EmptyBase {
+                overwrite_base = true;
+            }
+            
+            // If a change is detected, send a push notification
+            if result == CompareResult::Different {
+                let push_notification: Message = pushover_rs::MessageBuilder::new(
+                    &config.pushover.user_key, 
+                    &config.pushover.app_token, 
+                    &config.push_message
+                )
+                .build();
+                send_pushover_request(push_notification).await?;
+            }
+        }
 
         // Cooldown take a coffee/tea
         tokio::time::sleep(duration).await;
