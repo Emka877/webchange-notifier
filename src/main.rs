@@ -36,6 +36,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // main loop
     loop {
         // Get the page content write type (create a base vs create a comparison)
+        // If a base already exists (see check above), it will (over)write the comparison file instead.
+        // If no base is detected, the type will always be BASE.
         let mut write_type: WriteType = match base_exists {
             true => WriteType::Comparison,
             false => WriteType::Base,
