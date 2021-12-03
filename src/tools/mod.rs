@@ -1,4 +1,4 @@
-use crate::config::{get_relative_pathbuf_to, FileType};
+use crate::config::{get_absolute_pathbuf_to, FileType};
 use crate::errors::{BaseOverwriteError, FileReadError};
 use crate::models::AppConfig;
 use crate::{BASE_FILENAME, COMPARISON_FILENAME};
@@ -125,14 +125,14 @@ pub fn write_page_to_file(
     write_type: WriteType,
     overwrite: bool,
 ) -> Result<(), Box<dyn Error>> {
-    let base_exists: bool = get_relative_pathbuf_to(app_config, FileType::WriteType(WriteType::Base)).exists();
+    let base_exists: bool = get_absolute_pathbuf_to(app_config, FileType::WriteType(WriteType::Base)).exists();
     if write_type.clone() == WriteType::Base && base_exists && !overwrite {
         return Err(Box::new(BaseOverwriteError::new(
             "Trying to overwrite existing base without the overwrite toggle.",
         )));
     }
 
-    let path = get_relative_pathbuf_to(app_config, FileType::WriteType(write_type));
+    let path = get_absolute_pathbuf_to(app_config, FileType::WriteType(write_type));
     let exists_already = path.exists();
 
     if !exists_already {

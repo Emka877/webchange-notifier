@@ -5,7 +5,6 @@ mod models;
 mod tests;
 mod tools;
 
-use config::{get_relative_pathbuf_to, FileType};
 use errors::FileReadError;
 use pushover_rs::{Message, send_pushover_request};
 use tools::{read_file_content, compare_pages, CompareResult};
