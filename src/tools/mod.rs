@@ -13,6 +13,7 @@ use std::path::PathBuf;
 
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq)]
+/// Represents the result of the comparison of a base vs comparison file
 pub enum CompareResult {
     Same,
     Different,
